@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only production vs Astro preview parity audit. Python standard library only."""
 import concurrent.futures
+import difflib
 import json
 import os
 import re
@@ -109,7 +110,14 @@ def check(route):
             left, right = [normalize_url(v) for v in left], [normalize_url(v) for v in right]
         if left != right:
             issue = {"field":field}
-            if field == "text": issue.update({"live_length":len(left),"preview_length":len(right),"live_excerpt":left[:160],"preview_excerpt":right[:160]})
+            if field == "text":
+                live_words, preview_words = left.split(), right.split()
+                matcher = difflib.SequenceMatcher(None, live_words, preview_words, autojunk=False)
+                changes = []
+                for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+                    if tag != "equal":
+                        changes.append({"type": tag, "live_word_range": [i1+1, i2], "preview_word_range": [j1+1, j2], "live_words": live_words[i1:i2], "preview_words": preview_words[j1:j2]})
+                issue.update({"live_length":len(left),"preview_length":len(right),"live_word_count":len(live_words),"preview_word_count":len(preview_words),"word_changes":changes})
             else: issue.update({"live":str(left)[:700],"preview":str(right)[:700]})
             result["issues"].append(issue)
     for field in ("canonical",):
@@ -150,6 +158,14 @@ lines += [f"- {k}: {v}" for k,v in sorted(summary["issues_by_field"].items(),key
 lines += ["","## Pages with differences"]
 for r in results:
     if r["issues"]: lines.append(f"- {r['route']} (live {r.get('live_status')}, preview {r.get('preview_status')}): "+", ".join(i["field"] for i in r["issues"]))
+for r in results:
+    for issue in r["issues"]:
+        if issue["field"] == "text":
+            lines.append("")
+            lines.append("### Full word changes: "+r["route"])
+            lines.append(f"Original words: {issue['live_word_count']}; preview words: {issue['preview_word_count']}")
+            for change in issue["word_changes"]:
+                lines.append("- "+change["type"]+" original="+json.dumps(" ".join(change["live_words"]), ensure_ascii=False)+" preview="+json.dumps(" ".join(change["preview_words"]), ensure_ascii=False))
 (OUT/"parity-report.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
 print("\n".join(lines))
 # Audit is informational while parity is being fixed. Reports are uploaded as artifacts.
