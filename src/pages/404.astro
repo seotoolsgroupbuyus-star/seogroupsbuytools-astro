@@ -1,8 +1,0 @@
----
-import fs from 'node:fs';
-import renderPage from '../lib/render.js';
-const page=JSON.parse(fs.readFileSync('content/pages/404.json','utf8'));
-const settings=JSON.parse(fs.readFileSync('content/settings.json','utf8'));
-const renderedHtml=renderPage(page,settings);
----
-<Fragment set:html={renderedHtml} />
