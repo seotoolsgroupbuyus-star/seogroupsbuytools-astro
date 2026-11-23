@@ -18,6 +18,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build static website
         run: npm run build
+      - name: Check 404 status handler and permanent redirects
+        run: node scripts/verify-edge.mjs
       - name: Upload build output
         if: success()
         uses: actions/upload-artifact@v4
