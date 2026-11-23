@@ -14,6 +14,26 @@ content:
     path: content/homepage.json
     format: json
     fields:
+      - name: extraSections
+        label: Add New Sections and Cards
+        type: object
+        list: { collapsible: { collapsed: true, summary: "{heading}" } }
+        fields: &new_section_fields
+          - { name: heading, label: Section Heading, type: string }
+          - { name: description, label: Section Description, type: text }
+          - { name: buttonText, label: Section Button Label, type: string }
+          - { name: buttonUrl, label: Section Button URL, type: string }
+          - name: cards
+            label: Additional Cards
+            type: object
+            list: { collapsible: { collapsed: true, summary: "{title}" } }
+            fields:
+              - { name: title, label: Card Title, type: string }
+              - { name: description, label: Card Description, type: text }
+              - { name: image, label: Card Image, type: image, options: { media: uploads } }
+              - { name: imageAlt, label: Image Alt Text, type: string }
+              - { name: buttonText, label: Card Button Text, type: string }
+              - { name: buttonUrl, label: Card Button URL, type: string }
       - name: hero
         label: Homepage hero
         type: object
@@ -136,6 +156,11 @@ content:
     view: { primary: title, fields: [title, route] }
     operations: { rename: false, delete: false }
     fields:
+      - name: extraSections
+        label: Add New Sections and Cards
+        type: object
+        list: { collapsible: { collapsed: true, summary: "{heading}" } }
+        fields: *new_section_fields
       - name: productHero
         label: Product details
         type: object
@@ -251,6 +276,11 @@ content:
     view: { primary: title, fields: [title, route] }
     operations: { rename: false, delete: false }
     fields:
+      - name: extraSections
+        label: Add New Sections and Cards
+        type: object
+        list: { collapsible: { collapsed: true, summary: "{heading}" } }
+        fields: *new_section_fields
       - { name: title, label: Page title, type: string }
       - name: outsideGroups
         label: Hero, pricing and visual sections
