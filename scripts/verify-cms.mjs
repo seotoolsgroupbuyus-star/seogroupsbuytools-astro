@@ -8,6 +8,15 @@ const totals={pages:0,groups:0,outsideGroups:0,editableText:0,buttons:0,cards:0,
 for (const file of files) {
   const page=JSON.parse(fs.readFileSync(file,'utf8'));
   assert.equal(renderPage(page,site),page.html,'Unedited page HTML changed: '+file);
+  if(file==='content/homepage.json'){
+    const extraNav=structuredClone(site);
+    extraNav.siteChrome.headerLinks.push({text:'CMS ADDED MENU LINK',url:'/cms-new-nav/'});
+    extraNav.siteChrome.footerLinks.push({text:'CMS ADDED FOOTER LINK',url:'/cms-footer/'});
+    const edited=renderPage(page,extraNav);
+    for(const marker of ['CMS ADDED MENU LINK','/cms-new-nav/','CMS ADDED FOOTER LINK','/cms-footer/'])
+      assert.ok(edited.includes(marker),'CMS header/footer add link: '+marker);
+  }
+
   const newSection=structuredClone(page);
   newSection.extraSections=[{heading:'CMS ADDED SECTION TEST',description:'CMS custom description',
     buttonText:'CMS section button',buttonUrl:'/cms-example/',
