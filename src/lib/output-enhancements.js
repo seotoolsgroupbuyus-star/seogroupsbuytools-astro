@@ -24,6 +24,13 @@ export function enhanceOutput(html,page,settings={}){
       return target ? before+target+after : full;
     });
   }
+  // The original /is-it-safe/ page overflows on narrow viewports because its
+  // single-column CSS grid uses the intrinsic minimum width of a data table.
+  // Constrain the grid track while leaving the table horizontally scrollable.
+  if(page.route==='/is-it-safe/'){
+    const responsive='<style>@media(max-width:640px){.content-layout,.content-layout--full,.content-layout:not(:has(.sidebar)){grid-template-columns:minmax(0,1fr)}.content-article,.tables-section{min-width:0;max-width:100%}.table-wrap{max-width:100%;overflow-x:auto}}</style>';
+    html=html.replace('</head>',responsive+'\n</head>');
+  }
   if(!page.productHero)return html;
   const hero=page.productHero;
   const site=(settings.siteUrl||'https://seogroupsbuytools.com').replace(/\/$/,'');
