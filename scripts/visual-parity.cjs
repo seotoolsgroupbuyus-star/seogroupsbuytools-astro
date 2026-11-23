@@ -41,7 +41,7 @@ fs.mkdirSync(out,{recursive:true});
         if(a.title!==b.title)issues.push({route,viewport:size.name,problem:'Title mismatch',live:a.title,preview:b.title});
         if(JSON.stringify(a.h1)!==JSON.stringify(b.h1))issues.push({route,viewport:size.name,problem:'H1 mismatch',live:a.h1,preview:b.h1});
         if(b.errors?.length)issues.push({route,viewport:size.name,problem:'Preview JavaScript errors',errors:b.errors});
-        if(b.scrollWidth>b.viewportWidth+2)issues.push({route,viewport:size.name,problem:'Preview horizontal overflow',scrollWidth:b.scrollWidth,viewportWidth:b.viewportWidth,elements:b.overflowElements});
+        if(b.scrollWidth>b.viewportWidth+2)issues.push({route,viewport:size.name,problem:'Preview horizontal overflow',scrollWidth:b.scrollWidth,viewportWidth:b.viewportWidth,elements:b.overflowElements,liveScrollWidth:a.scrollWidth,liveOverflowElements:a.overflowElements});
         if(a.bodyHeight&&b.bodyHeight&&Math.abs(a.bodyHeight-b.bodyHeight)/Math.max(a.bodyHeight,b.bodyHeight)>0.2)
           warnings.push({route,viewport:size.name,problem:'Page height differs by over 20%',live:a.bodyHeight,preview:b.bodyHeight});
       }
