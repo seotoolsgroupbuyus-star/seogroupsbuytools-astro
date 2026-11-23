@@ -17,7 +17,19 @@ const linkSources = new Set([
   '/compare/seo-vs-design-group-buy/',
 ]);
 export const repairedLinks = Object.fromEntries(fixedLinks);
+// Change only member login, signup and cart URL hosts; keep plan/product IDs intact.
+function paymentHref(target,settings){
+  const base=String(settings.paymentBaseUrl||'https://pay.seogroupsbuytools.com').replace(/\/$/,'');
+  return String(target).replace(/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|seogroupsbuytools\.com)(?=\/users\/(?:login|signup|cart\/))/i,base);
+}
+function rewritePaymentAnchors(html,settings){
+  return String(html).replace(/(\bhref\s*=\s*["'])([^"']+)(["'])/gi,(whole,first,target,last)=>{
+    const updated=paymentHref(target,settings);
+    return first+updated+last;
+  });
+}
 export function enhanceOutput(html,page,settings={}){
+  html=rewritePaymentAnchors(html,settings);
   if(linkSources.has(page.route)){
     html=html.replace(/(<a\b[^>]*\bhref=")([^"]+)(")/gi,(full,before,url,after)=>{
       const target=fixedLinks.get(url);
