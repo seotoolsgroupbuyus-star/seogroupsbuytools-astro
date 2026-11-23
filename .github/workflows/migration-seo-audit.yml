@@ -1,0 +1,36 @@
+name: Migration SEO and route audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/verify-migration.mjs'
+      - 'content/**'
+      - 'migration/url-map.json'
+      - 'public/**'
+      - 'src/**'
+      - 'package.json'
+      - '.github/workflows/migration-seo-audit.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Build Astro output
+        run: npm run build
+      - name: Audit routes, SEO, indexability, sitemap, JSON-LD and media references
+        run: node scripts/verify-migration.mjs
+      - name: Upload migration audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-migration-seo-audit
+          path: audit-results/static-migration-audit.json
+          if-no-files-found: warn
