@@ -12,6 +12,7 @@ const locs=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1].replace(/&a
 const locationSet=new Set(locs);
 const localAssets=new Set();
 let schemaCount=0, jsonldErrors=0, productCount=0, imageCount=0, missingAlt=0;
+let checkedInternalLinks=0; const unresolvedInternalLinks=new Map();
 function extract(html,regex){return html.match(regex)?.[1]||''}
 function outputPath(route){return route==='/'?'dist/index.html':path.join('dist',route.slice(1),'index.html')}
 for(const item of records){
@@ -45,6 +46,19 @@ for(const item of records){
    if(!fs.existsSync(path.join('dist',u.pathname.slice(1))))warnings.push('Local media asset not found: '+u.pathname+' on '+route);
   }
  }
+ for(const match of html.matchAll(/<a\\b[^>]*?\\bhref=["']([^"']+)["']/gi)){
+  const href=match[1];
+  if(!href||href.startsWith('#')||/^(mailto:|tel:|javascript:|data:)/i.test(href))continue;
+  let target;try{target=new URL(href,base+route)}catch{continue}
+  if(target.origin!==base)continue;
+  checkedInternalLinks++;
+  if(/\\.[a-z0-9]{2,8}$/i.test(target.pathname))continue; // Files/assets, not HTML routes
+  const pathname=target.pathname==='/'?'/':target.pathname.replace(/\\/+$/,'')+'/';
+  if(!routeSet.has(pathname)){
+   const key=route+' -> '+pathname;
+   unresolvedInternalLinks.set(key,(unresolvedInternalLinks.get(key)||0)+1);
+  }
+ }
  imageCount+=images.length;
  missingAlt+=images.filter(tag=>!(/\balt\s*=/.test(tag))).length;
  if(item.content.startsWith('content/products/'))productCount++;
@@ -54,7 +68,8 @@ if(!robots.includes('Sitemap: '+base+'/sitemap.xml'))failures.push('robots.txt m
 if(!robots.toLowerCase().includes('user-agent:'))failures.push('robots.txt missing user-agent');
 for(const loc of locs){try{const u=new URL(loc);if(u.origin===base&&!routeSet.has(u.pathname))warnings.push('Sitemap URL without source page: '+loc)}catch{failures.push('Malformed sitemap URL: '+loc)}}
 if(locationSet.size!==locs.length)failures.push('Duplicate URLs in sitemap');
-const summary={expectedSourceRecords:records.length,publishedRoutes:routeSet.size,verifiedPages:pages.length,productPages:productCount,sitemapUrls:locs.length,structuredDataBlocks:schemaCount,malformedStructuredData:jsonldErrors,images:imageCount,imagesWithoutAltAttribute:missingAlt,uniqueReferencedAssets:localAssets.size,failures:failures.length,warnings:warnings.length};
+for(const [pair,count] of unresolvedInternalLinks)warnings.push('Unresolved internal link ('+count+'): '+pair);
+const summary={expectedSourceRecords:records.length,publishedRoutes:routeSet.size,verifiedPages:pages.length,productPages:productCount,sitemapUrls:locs.length,structuredDataBlocks:schemaCount,malformedStructuredData:jsonldErrors,images:imageCount,imagesWithoutAltAttribute:missingAlt,uniqueReferencedAssets:localAssets.size,checkedInternalLinks,unresolvedInternalLinkPairs:unresolvedInternalLinks.size,failures:failures.length,warnings:warnings.length};
 fs.mkdirSync('audit-results',{recursive:true});
 fs.writeFileSync('audit-results/static-migration-audit.json',JSON.stringify({summary,failures,warnings,pages},null,2)+'\n');
 console.log(JSON.stringify({summary,failures:failures.slice(0,40),warnings:warnings.slice(0,40)},null,2));
