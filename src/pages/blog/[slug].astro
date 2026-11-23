@@ -39,6 +39,6 @@ const article='<section class="page-header-section"><div class="container"><h1>'
   +'<div class="container"><div class="content-layout"><main class="main-content content-article" role="main"><article class="content-section">'
   +feature+content+'</article></main></div></div>';
 const html=head+'<body>'+header+article+footer+mainScript+'</body></html>';
-const renderedHtml=renderPage({html,route:'/blog/'+slug+'/'},settings);
+const renderedHtml=renderPage({html,route:'/blog/'+slug+'/',seoCanonical:post.seoCanonical,seoRobots:post.seoRobots,seoSocialImage:post.seoSocialImage},settings);
 ---
 <Fragment set:html={renderedHtml} />
