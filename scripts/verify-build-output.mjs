@@ -44,7 +44,7 @@ if (mode==='apply') {
     assert.ok(fs.readFileSync(file,'utf8').includes(needle),'CMS edit not reflected in '+file+': '+needle);
   }
   const productHtml=fs.readFileSync('dist/seo-tools/ahrefs/index.html','utf8');
-  const schemas=[...productHtml.matchAll(/<script type="application\\/ld\\+json">([\\s\\S]*?)<\\/script>/gi)].map(match=>JSON.parse(match[1]));
+  const schemas=[...productHtml.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi)].map(match=>JSON.parse(match[1]));
   const schema=schemas.find(data=>data['@type']==='Product');
   assert.ok(schema,'Product structured data was not generated after a CMS edit');
   assert.equal(schema.name,'CMS EDITED AHREFS','Product schema must use updated CMS name');
