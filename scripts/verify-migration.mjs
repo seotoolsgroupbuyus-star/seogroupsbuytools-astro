@@ -53,7 +53,7 @@ for(const item of records){
   if(target.origin!==base)continue;
   checkedInternalLinks++;
   if(/\\.[a-z0-9]{2,8}$/i.test(target.pathname))continue; // Files/assets, not HTML routes
-  const pathname=target.pathname==='/'?'/':target.pathname.replace(/\\/+$/,'')+'/';
+  const pathname=target.pathname==='/'?'/':(target.pathname.endsWith('/')?target.pathname:target.pathname+'/');
   if(!routeSet.has(pathname)){
    const key=route+' -> '+pathname;
    unresolvedInternalLinks.set(key,(unresolvedInternalLinks.get(key)||0)+1);
