@@ -248,5 +248,6 @@
     "footerText": "Affordable access to 50+ premium SEO, design, and marketing tools. Save 80-96% on individual subscriptions.",
     "originalFooterText": "Affordable access to 50+ premium SEO, design, and marketing tools. Save 80-96% on individual subscriptions."
   },
-  "originalSiteName": "SEO Group Buy Tools"
+  "originalSiteName": "SEO Group Buy Tools",
+  "paymentBaseUrl": "https://pay.seogroupsbuytools.com"
 }
