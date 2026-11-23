@@ -41,7 +41,7 @@ for(const item of records){
  if(item.content.startsWith('content/products/')){
   const types=validSchemas.flatMap(data=>[data?.['@type'],...(Array.isArray(data?.['@graph'])?data['@graph'].map(node=>node['@type']):[])]).flat().filter(Boolean);
   if(types.includes('Product'))productSchemaCount++;
-  else warnings.push('Product structured data absent (live parity retained): '+route);
+  else failures.push('Product structured data absent: '+route);
  }
  for(const asset of assets){
   if(!asset.startsWith('/assets/')&&!asset.startsWith('assets/')&&!asset.startsWith('../assets/'))continue;
@@ -74,7 +74,8 @@ if(!robots.includes('Sitemap: '+base+'/sitemap.xml'))failures.push('robots.txt m
 if(!robots.toLowerCase().includes('user-agent:'))failures.push('robots.txt missing user-agent');
 for(const loc of locs){try{const u=new URL(loc);if(u.origin===base&&!routeSet.has(u.pathname))warnings.push('Sitemap URL without source page: '+loc)}catch{failures.push('Malformed sitemap URL: '+loc)}}
 if(locationSet.size!==locs.length)failures.push('Duplicate URLs in sitemap');
-for(const [pair,count] of unresolvedInternalLinks)warnings.push('Unresolved internal link ('+count+'): '+pair);
+for(const [pair,count] of unresolvedInternalLinks)failures.push('Unresolved internal link ('+count+'): '+pair);
+if(productSchemaCount!==productCount)failures.push('Not every product has Product JSON-LD: '+productSchemaCount+'/'+productCount);
 const summary={expectedSourceRecords:records.length,publishedRoutes:routeSet.size,verifiedPages:pages.length,productPages:productCount,sitemapUrls:locs.length,structuredDataBlocks:schemaCount,productSchemaCount,malformedStructuredData:jsonldErrors,images:imageCount,imagesWithoutAltAttribute:missingAlt,uniqueReferencedAssets:localAssets.size,checkedInternalLinks,unresolvedInternalLinkPairs:unresolvedInternalLinks.size,failures:failures.length,warnings:warnings.length};
 fs.mkdirSync('audit-results',{recursive:true});
 fs.writeFileSync('audit-results/static-migration-audit.json',JSON.stringify({summary,failures,warnings,pages},null,2)+'\n');
