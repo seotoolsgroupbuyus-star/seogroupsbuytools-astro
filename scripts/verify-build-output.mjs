@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 const sample = [
   ['content/homepage.json',p=>{p.hero.headingHighlight='CMS HOME HERO VALIDATION';}],
   ['content/products/seo-tools__ahrefs.json',p=>{
+    p.productHero.name='CMS EDITED AHREFS';
     p.productHero.price='$12345';
     p.productHero.buttonUrl='/cms-checkout-validation/';
   }],
@@ -32,6 +33,7 @@ if (mode==='apply') {
   const checks=[
     ['dist/index.html','CMS HOME HERO VALIDATION'],
     ['dist/seo-tools/ahrefs/index.html','$12345'],
+    ['dist/seo-tools/ahrefs/index.html','CMS EDITED AHREFS'],
     ['dist/seo-tools/ahrefs/index.html','/cms-checkout-validation/'],
     ['dist/pricing/index.html','$54321'],
     ['dist/faq/index.html','CMS FAQ VALIDATION'],
@@ -41,5 +43,12 @@ if (mode==='apply') {
     assert.ok(fs.existsSync(file),'Missing generated page: '+file);
     assert.ok(fs.readFileSync(file,'utf8').includes(needle),'CMS edit not reflected in '+file+': '+needle);
   }
-  console.log('Six CMS save -> Astro build -> rendered output checks passed.');
+  const productHtml=fs.readFileSync('dist/seo-tools/ahrefs/index.html','utf8');
+  const schemas=[...productHtml.matchAll(/<script type="application\\/ld\\+json">([\\s\\S]*?)<\\/script>/gi)].map(match=>JSON.parse(match[1]));
+  const schema=schemas.find(data=>data['@type']==='Product');
+  assert.ok(schema,'Product structured data was not generated after a CMS edit');
+  assert.equal(schema.name,'CMS EDITED AHREFS','Product schema must use updated CMS name');
+  assert.equal(schema.offers?.price,'12345','Product schema must use updated CMS price');
+  assert.equal(schema.url,'https://seogroupsbuytools.com/seo-tools/ahrefs/');
+  console.log('CMS save -> Astro HTML and product schema checks passed.');
 } else throw new Error('Usage: node scripts/verify-build-output.mjs apply|check');
