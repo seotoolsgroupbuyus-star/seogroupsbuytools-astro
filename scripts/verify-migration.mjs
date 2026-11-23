@@ -11,7 +11,7 @@ const routeSet=new Set(records.filter(r=>r.route!=='/404/').map(r=>r.route));
 const locs=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1].replace(/&amp;/g,'&'));
 const locationSet=new Set(locs);
 const localAssets=new Set();
-let schemaCount=0, jsonldErrors=0, productCount=0, imageCount=0, missingAlt=0;
+let schemaCount=0, jsonldErrors=0, productCount=0, productSchemaCount=0, imageCount=0, missingAlt=0;
 let checkedInternalLinks=0; const unresolvedInternalLinks=new Map();
 function extract(html,regex){return html.match(regex)?.[1]||''}
 function outputPath(route){return route==='/'?'dist/index.html':path.join('dist',route.slice(1),'index.html')}
@@ -36,7 +36,13 @@ for(const item of records){
  else if(/noindex/i.test(robotsMeta))warnings.push('Noindex published route: '+route);
  if(headings!==1)warnings.push('H1 count '+headings+': '+route);
  if(!locationSet.has(base+route))failures.push('Sitemap missing published route: '+route);
- for(const match of schemas){try{JSON.parse(match[1]);schemaCount++}catch{jsonldErrors++;failures.push('Malformed JSON-LD: '+route)}}
+ const validSchemas=[];
+ for(const match of schemas){try{const data=JSON.parse(match[1]);validSchemas.push(data);schemaCount++}catch{jsonldErrors++;failures.push('Malformed JSON-LD: '+route)}}
+ if(item.content.startsWith('content/products/')){
+  const types=validSchemas.flatMap(data=>[data?.['@type'],...(Array.isArray(data?.['@graph'])?data['@graph'].map(node=>node['@type']):[])]).flat().filter(Boolean);
+  if(types.includes('Product'))productSchemaCount++;
+  else warnings.push('Product structured data absent (live parity retained): '+route);
+ }
  for(const asset of assets){
   if(!asset.startsWith('/assets/')&&!asset.startsWith('assets/')&&!asset.startsWith('../assets/'))continue;
   let u;try{u=new URL(asset,base+route)}catch{continue}
@@ -69,7 +75,7 @@ if(!robots.toLowerCase().includes('user-agent:'))failures.push('robots.txt missi
 for(const loc of locs){try{const u=new URL(loc);if(u.origin===base&&!routeSet.has(u.pathname))warnings.push('Sitemap URL without source page: '+loc)}catch{failures.push('Malformed sitemap URL: '+loc)}}
 if(locationSet.size!==locs.length)failures.push('Duplicate URLs in sitemap');
 for(const [pair,count] of unresolvedInternalLinks)warnings.push('Unresolved internal link ('+count+'): '+pair);
-const summary={expectedSourceRecords:records.length,publishedRoutes:routeSet.size,verifiedPages:pages.length,productPages:productCount,sitemapUrls:locs.length,structuredDataBlocks:schemaCount,malformedStructuredData:jsonldErrors,images:imageCount,imagesWithoutAltAttribute:missingAlt,uniqueReferencedAssets:localAssets.size,checkedInternalLinks,unresolvedInternalLinkPairs:unresolvedInternalLinks.size,failures:failures.length,warnings:warnings.length};
+const summary={expectedSourceRecords:records.length,publishedRoutes:routeSet.size,verifiedPages:pages.length,productPages:productCount,sitemapUrls:locs.length,structuredDataBlocks:schemaCount,productSchemaCount,malformedStructuredData:jsonldErrors,images:imageCount,imagesWithoutAltAttribute:missingAlt,uniqueReferencedAssets:localAssets.size,checkedInternalLinks,unresolvedInternalLinkPairs:unresolvedInternalLinks.size,failures:failures.length,warnings:warnings.length};
 fs.mkdirSync('audit-results',{recursive:true});
 fs.writeFileSync('audit-results/static-migration-audit.json',JSON.stringify({summary,failures,warnings,pages},null,2)+'\n');
 console.log(JSON.stringify({summary,failures:failures.slice(0,40),warnings:warnings.slice(0,40)},null,2));
