@@ -29,7 +29,7 @@ fs.mkdirSync(out,{recursive:true});
             await page.waitForTimeout(300);
             await page.screenshot({path:path.join(out,`${name}-${size.name}-${label}.png`),fullPage:true,animations:'disabled'});
           }
-          entry[label] = {status:response?.status(),title:await page.title(),h1:await page.locator('h1').allTextContents(),bodyHeight:await page.evaluate(()=>document.documentElement.scrollHeight),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth),viewportWidth:await page.evaluate(()=>document.documentElement.clientWidth),buttons:await page.locator('button').count(),forms:await page.locator('form').count(),errors:failures};
+          entry[label] = {status:response?.status(),title:await page.title(),h1:await page.locator('h1').allTextContents(),bodyHeight:await page.evaluate(()=>document.documentElement.scrollHeight),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth),viewportWidth:await page.evaluate(()=>document.documentElement.clientWidth),buttons:await page.locator('button').count(),forms:await page.locator('form').count(),overflowElements:await page.evaluate(()=>{const width=document.documentElement.clientWidth;return [...document.querySelectorAll('body *')].filter(el=>{const rect=el.getBoundingClientRect();return rect.right>width+3&&rect.width>10&&getComputedStyle(el).position!=='fixed'}).slice(0,12).map(el=>({tag:el.tagName,cls:String(el.className||'').slice(0,100),width:Math.round(el.getBoundingClientRect().width),right:Math.round(el.getBoundingClientRect().right)}))}),errors:failures};
         } catch(e) {entry[label] = {error:String(e)}}
         await page.close();
       }
@@ -41,7 +41,7 @@ fs.mkdirSync(out,{recursive:true});
         if(a.title!==b.title)issues.push({route,viewport:size.name,problem:'Title mismatch',live:a.title,preview:b.title});
         if(JSON.stringify(a.h1)!==JSON.stringify(b.h1))issues.push({route,viewport:size.name,problem:'H1 mismatch',live:a.h1,preview:b.h1});
         if(b.errors?.length)issues.push({route,viewport:size.name,problem:'Preview JavaScript errors',errors:b.errors});
-        if(b.scrollWidth>b.viewportWidth+2)issues.push({route,viewport:size.name,problem:'Preview horizontal overflow',scrollWidth:b.scrollWidth,viewportWidth:b.viewportWidth});
+        if(b.scrollWidth>b.viewportWidth+2)issues.push({route,viewport:size.name,problem:'Preview horizontal overflow',scrollWidth:b.scrollWidth,viewportWidth:b.viewportWidth,elements:b.overflowElements});
         if(a.bodyHeight&&b.bodyHeight&&Math.abs(a.bodyHeight-b.bodyHeight)/Math.max(a.bodyHeight,b.bodyHeight)>0.2)
           warnings.push({route,viewport:size.name,problem:'Page height differs by over 20%',live:a.bodyHeight,preview:b.bodyHeight});
       }
