@@ -8,6 +8,14 @@ const totals={pages:0,groups:0,outsideGroups:0,editableText:0,buttons:0,cards:0,
 for (const file of files) {
   const page=JSON.parse(fs.readFileSync(file,'utf8'));
   assert.equal(renderPage(page,site),page.html,'Unedited page HTML changed: '+file);
+  const newSection=structuredClone(page);
+  newSection.extraSections=[{heading:'CMS ADDED SECTION TEST',description:'CMS custom description',
+    buttonText:'CMS section button',buttonUrl:'/cms-example/',
+    cards:[{title:'CMS custom card',description:'CMS card description',image:'/assets/images/cms-card.webp',imageAlt:'CMS image alt',buttonText:'CMS card link',buttonUrl:'/cms-card/'}]}];
+  const added=renderPage(newSection,site);
+  for(const text of ['CMS ADDED SECTION TEST','CMS custom description','CMS custom card','CMS card description','CMS section button','/cms-example/','/cms-card/','cms-card.webp'])
+    assert.ok(added.includes(text),file+' extraSections CMS rendering: '+text);
+
   assert.ok(Array.isArray(page.outsideGroups), 'Missing outside CMS groups: '+file);
   assert.ok(Array.isArray(page.contentGroups), 'Missing CMS groups: '+file);
   for (const group of [...page.contentGroups,...page.outsideGroups]) {
