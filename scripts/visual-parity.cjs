@@ -29,7 +29,17 @@ fs.mkdirSync(out,{recursive:true});
             await page.waitForTimeout(300);
             await page.screenshot({path:path.join(out,`${name}-${size.name}-${label}.png`),fullPage:true,animations:'disabled'});
           }
-          entry[label] = {status:response?.status(),title:await page.title(),h1:await page.locator('h1').allTextContents(),bodyHeight:await page.evaluate(()=>document.documentElement.scrollHeight),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth),viewportWidth:await page.evaluate(()=>document.documentElement.clientWidth),buttons:await page.locator('button').count(),forms:await page.locator('form').count(),overflowElements:await page.evaluate(()=>{const width=document.documentElement.clientWidth;return [...document.querySelectorAll('body *')].filter(el=>{const rect=el.getBoundingClientRect();return rect.right>width+3&&rect.width>10&&getComputedStyle(el).position!=='fixed'}).slice(0,12).map(el=>({tag:el.tagName,cls:String(el.className||'').slice(0,100),width:Math.round(el.getBoundingClientRect().width),right:Math.round(el.getBoundingClientRect().right)}))}),errors:failures};
+          const styleSnapshot=await page.evaluate(()=>{
+            const selectors=['body','.site-header','.container','.hero-live','.hero-live-content','h1','.content-layout','.content-article','.cat-grid','.cat-card','.tool-card','.pricing-grid','.pricing-card','.site-footer','.nav-menu'];
+            const fields=['fontFamily','fontSize','fontWeight','lineHeight','color','backgroundColor','paddingTop','paddingBottom','paddingLeft','paddingRight','borderRadius','display','gridTemplateColumns','gap'];
+            return Object.fromEntries(selectors.flatMap(selector=>{
+              const element=document.querySelector(selector);
+              if(!element)return [];
+              const style=getComputedStyle(element),rect=element.getBoundingClientRect();
+              return [[selector,{...Object.fromEntries(fields.map(field=>[field,style[field]])),width:Math.round(rect.width),height:Math.round(rect.height)}]];
+            }));
+          });
+          entry[label] = {styleSnapshot,status:response?.status(),title:await page.title(),h1:await page.locator('h1').allTextContents(),bodyHeight:await page.evaluate(()=>document.documentElement.scrollHeight),scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth),viewportWidth:await page.evaluate(()=>document.documentElement.clientWidth),buttons:await page.locator('button').count(),forms:await page.locator('form').count(),overflowElements:await page.evaluate(()=>{const width=document.documentElement.clientWidth;return [...document.querySelectorAll('body *')].filter(el=>{const rect=el.getBoundingClientRect();return rect.right>width+3&&rect.width>10&&getComputedStyle(el).position!=='fixed'}).slice(0,12).map(el=>({tag:el.tagName,cls:String(el.className||'').slice(0,100),width:Math.round(el.getBoundingClientRect().width),right:Math.round(el.getBoundingClientRect().right)}))}),errors:failures};
         } catch(e) {entry[label] = {error:String(e)}}
         await page.close();
       }
@@ -41,6 +51,23 @@ fs.mkdirSync(out,{recursive:true});
         if(a.title!==b.title)issues.push({route,viewport:size.name,problem:'Title mismatch',live:a.title,preview:b.title});
         if(JSON.stringify(a.h1)!==JSON.stringify(b.h1))issues.push({route,viewport:size.name,problem:'H1 mismatch',live:a.h1,preview:b.h1});
         if(b.errors?.length)issues.push({route,viewport:size.name,problem:'Preview JavaScript errors',errors:b.errors});
+        if(screenshotRoutes.has(route)){
+          const selectors=new Set([...Object.keys(a.styleSnapshot||{}),...Object.keys(b.styleSnapshot||{})]);
+          for(const selector of selectors){
+            const liveStyle=a.styleSnapshot?.[selector],previewStyle=b.styleSnapshot?.[selector];
+            if(!liveStyle||!previewStyle){
+              warnings.push({route,viewport:size.name,problem:'Missing styled component',selector,live:!!liveStyle,preview:!!previewStyle});continue;
+            }
+            const changed={};
+            for(const key of Object.keys(liveStyle)){
+              if(key==='height'||key==='width'){
+                if(Math.abs(liveStyle[key]-previewStyle[key])>5)changed[key]=[liveStyle[key],previewStyle[key]];
+              }else if(liveStyle[key]!==previewStyle[key])changed[key]=[liveStyle[key],previewStyle[key]];
+            }
+            if(Object.keys(changed).length)warnings.push({route,viewport:size.name,problem:'Computed CSS or geometry differs',selector,changed});
+          }
+        }
+
         if(b.scrollWidth>b.viewportWidth+2){
           const detail={route,viewport:size.name,problem:'Horizontal overflow',scrollWidth:b.scrollWidth,viewportWidth:b.viewportWidth,elements:b.overflowElements,liveScrollWidth:a.scrollWidth,liveOverflowElements:a.overflowElements};
           if(a.scrollWidth>b.viewportWidth+2 && Math.abs(a.scrollWidth-b.scrollWidth)<=2)
@@ -55,7 +82,7 @@ fs.mkdirSync(out,{recursive:true});
     await context.close();
   }
   await browser.close();
-  const summary={checkedPages:routes.length,viewports:sizes.length,comparedViews:results.length,criticalIssues:issues.length,heightWarnings:warnings.length,screenshotRoutes:[...screenshotRoutes]};
+  const summary={checkedPages:routes.length,viewports:sizes.length,comparedViews:results.length,criticalIssues:issues.length,designWarnings:warnings.length,screenshotRoutes:[...screenshotRoutes]};
   fs.writeFileSync('audit-results/visual-results.json',JSON.stringify({summary,issues,warnings,results},null,2));
   console.log('FULL BROWSER AUDIT',JSON.stringify({summary,issues:issues.slice(0,20),warnings:warnings.slice(0,10)}));
   if(issues.length)process.exitCode=1;
