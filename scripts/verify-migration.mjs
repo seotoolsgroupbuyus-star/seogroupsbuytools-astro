@@ -52,7 +52,7 @@ for(const item of records){
   let target;try{target=new URL(href,base+route)}catch{continue}
   if(target.origin!==base)continue;
   checkedInternalLinks++;
-  if(/\\.[a-z0-9]{2,8}$/i.test(target.pathname))continue; // Files/assets, not HTML routes
+  if(target.pathname.match(/\.[a-z0-9]{2,8}$/i))continue; // File target, not HTML
   const pathname=target.pathname==='/'?'/':(target.pathname.endsWith('/')?target.pathname:target.pathname+'/');
   if(!routeSet.has(pathname)){
    const key=route+' -> '+pathname;
