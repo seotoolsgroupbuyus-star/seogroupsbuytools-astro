@@ -69,11 +69,22 @@ function renderChrome(html, settings) {
     for(let i=0;i<Math.min(matches.length,links.length);i++) {
       const field=links[i],match=matches[i];
       if(plain(match[2])!==field.originalText) continue;
+      if(field.visible===false) { region=region.replace(match[0],''); continue; }
       if(field.text===field.originalText && field.url===field.originalUrl) continue;
       let edited=match[0];
       if(field.url!==field.originalUrl) edited=edited.replace(/href="[^"]*"/i,'href="'+attr(field.url)+'"');
       if(field.text!==field.originalText) edited=innerReplace(edited,field.text);
       region=region.replace(match[0],edited);
+    }
+    // Menu entries created in Pages CMS have no immutable originalText; render
+    // those links after existing links without altering the imported navigation.
+    const extra=links.filter(link=>link && !link.originalText && link.visible!==false && link.text && link.url)
+      .map(link=>'<a href="'+attr(link.url)+'">'+text(link.text)+'</a>').join('');
+    if(extra){
+      if(kind==='header') {
+        if(region.includes('</nav>'))region=region.replace('</nav>',extra+'</nav>');
+        else region=region.replace('</header>',extra+'</header>');
+      }else region=region.replace('</footer>',extra+'</footer>');
     }
     const key=kind==='header'?'headerLogo':'footerLogo',original=kind==='header'?'originalHeaderLogo':'originalFooterLogo';
     if(chrome[key] && chrome[key]!==chrome[original]) {
