@@ -202,6 +202,27 @@ export function renderPage(page,settings={}) {
     }
   }
   html=applyOperations(html,ops);
+  // Sections added by the no-code CMS are independent of imported source
+  // offsets. Zero configured sections means the original HTML stays intact.
+  if(Array.isArray(page.extraSections) && page.extraSections.length){
+    const makeCard=c=>'<article class="content-section cms-extra-card">'
+      +(c.image?'<img loading="lazy" style="max-width:100%;height:auto" src="'+attr(c.image)+'" alt="'+attr(c.imageAlt||c.title||'')+'">':'')
+      +(c.title?'<h3>'+text(c.title)+'</h3>':'')
+      +(c.description?'<p>'+text(c.description)+'</p>':'')
+      +(c.buttonText&&c.buttonUrl?'<a class="btn btn-primary" href="'+attr(c.buttonUrl)+'">'+text(c.buttonText)+'</a>':'')
+      +'</article>';
+    const sections=page.extraSections.filter(x=>x&&typeof x==='object').map(section=>
+      '<section class="content-section cms-extra-section">'
+      +(section.heading?'<h2>'+text(section.heading)+'</h2>':'')
+      +(section.description?'<p>'+text(section.description)+'</p>':'')
+      +(Array.isArray(section.cards)?'<div class="cms-extra-cards">'+section.cards.map(makeCard).join('')+'</div>':'')
+      +(section.buttonText&&section.buttonUrl?'<p><a class="btn btn-primary" href="'+attr(section.buttonUrl)+'">'+text(section.buttonText)+'</a></p>':'')
+      +'</section>'
+    ).join('');
+    const end=html.lastIndexOf('</main>');
+    if(end>=0)html=html.slice(0,end)+sections+html.slice(end);
+    else html=html.replace('</body>',sections+'</body>');
+  }
   if(page.seoTitle && page.seoTitle!==page.originalSeoTitle) {
     html=html.replace(/<title>[\s\S]*?<\/title>/i,'<title>'+text(page.seoTitle)+'</title>');
     html=seoMeta(html,'og:title',page.seoTitle,'property');
