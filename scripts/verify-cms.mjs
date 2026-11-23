@@ -175,6 +175,25 @@ for (const file of files) {
     edited.siteChrome.footerText='CMS FOOTER VALIDATION';
     assert.ok(renderPage(page,edited).includes('CMS FOOTER VALIDATION'),file+' footer edit');
   }
+  if(page.html.includes('rel="canonical"')) {
+    const edited=structuredClone(page);
+    edited.seoCanonical='https://seogroupsbuytools.com/cms-test/';
+    assert.ok(renderPage(edited,site).includes('rel="canonical" href="https://seogroupsbuytools.com/cms-test/"'),file+' canonical CMS edit');
+  }
+  if(page.html.includes('name="robots"')) {
+    const edited=structuredClone(page);
+    edited.seoRobots='noindex,follow';
+    assert.ok(renderPage(edited,site).includes('name="robots" content="noindex,follow"'),file+' robots CMS edit');
+  }
+  if(page.html.includes('</head>')) {
+    const edited=structuredClone(page);
+    edited.seoSocialImage='/assets/images/cms-social.png';
+    assert.ok(renderPage(edited,site).includes('cms-social.png'),file+' social image CMS edit');
+    const settings=structuredClone(site);
+    settings.faviconUrl='/assets/images/cms-favicon.png';
+    if(page.html.includes('rel="icon"'))
+      assert.ok(renderPage(page,settings).includes('cms-favicon.png'),file+' favicon CMS edit');
+  }
   totals.pages++;
   totals.groups+=page.contentGroups.length+page.outsideGroups.length;
   totals.outsideGroups+=page.outsideGroups.length;
