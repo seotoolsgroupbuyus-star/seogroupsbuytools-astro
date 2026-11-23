@@ -124,6 +124,9 @@ content:
           - { name: mode, type: string, hidden: true }
       - { name: seoTitle, label: SEO title, type: string }
       - { name: seoDescription, label: SEO description, type: text }
+      - { name: seoCanonical, label: Canonical URL Override (optional), type: string }
+      - { name: seoRobots, label: Indexing Robots Override (optional), type: string }
+      - { name: seoSocialImage, label: Social Sharing Image (optional), type: image, options: { media: uploads } }
   - name: products
     label: Products
     type: collection
@@ -236,6 +239,9 @@ content:
         fields: *image_fields
       - { name: seoTitle, label: SEO title, type: string }
       - { name: seoDescription, label: SEO description, type: text }
+      - { name: seoCanonical, label: Canonical URL Override (optional), type: string }
+      - { name: seoRobots, label: Indexing Robots Override (optional), type: string }
+      - { name: seoSocialImage, label: Social Sharing Image (optional), type: image, options: { media: uploads } }
   - name: pages
     label: Pages and guides
     type: collection
@@ -309,6 +315,9 @@ content:
         fields: *image_fields
       - { name: seoTitle, label: SEO title, type: string }
       - { name: seoDescription, label: SEO description, type: text }
+      - { name: seoCanonical, label: Canonical URL Override (optional), type: string }
+      - { name: seoRobots, label: Indexing Robots Override (optional), type: string }
+      - { name: seoSocialImage, label: Social Sharing Image (optional), type: image, options: { media: uploads } }
   - name: posts
     label: Blog posts
     type: collection
@@ -329,6 +338,9 @@ content:
         options: { format: html, media: uploads, switcher: false }
       - { name: seoTitle, label: SEO title, type: string }
       - { name: seoDescription, label: SEO description, type: text }
+      - { name: seoCanonical, label: Canonical URL Override (optional), type: string }
+      - { name: seoRobots, label: Indexing Robots Override (optional), type: string }
+      - { name: seoSocialImage, label: Social Sharing Image (optional), type: image, options: { media: uploads } }
   - name: settings
     label: Site settings
     type: file
@@ -336,6 +348,7 @@ content:
     format: json
     fields:
       - { name: siteName, label: Website name, type: string }
+      - { name: faviconUrl, label: Site Favicon (optional upload), type: image, options: { media: uploads } }
       - { name: originalSiteName, type: string, hidden: true }
       - name: siteChrome
         label: Header and footer
