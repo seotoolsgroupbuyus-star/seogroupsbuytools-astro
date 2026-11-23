@@ -129,7 +129,9 @@ def check(route):
             original_links = [normalize_url(v) for v in left]
             preview_links = [normalize_url(v) for v in right]
             result["approved_link_repairs"] = sum(1 for v in original_links if v in repaired_links)
-            left, right = [approved_link(v) for v in left], [approved_link(v) for v in right]
+            # Apply the expected repair to the original only. A stale preview
+            # still containing the broken URL MUST fail, not be normalized away.
+            left, right = [approved_link(v) for v in left], [normalize_url(v) for v in right]
         elif field in ("scripts", "stylesheets"):
             left, right = [normalize_url(v) for v in left], [normalize_url(v) for v in right]
         if left != right:
@@ -177,7 +179,7 @@ for result in results:
         summary["issues_by_field"][field] = summary["issues_by_field"].get(field,0)+1
 report = {"summary":summary,"results":results}
 (OUT/"parity-report.json").write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding="utf-8")
-lines = ["# Production vs Astro preview parity report","",f"- Live: {LIVE}",f"- Preview: {PREVIEW}",f"- Routes/assets checked: {summary['total_checked']}",f"- Exact checks passed: {summary['matching']}",f"- Differences/errors: {summary['mismatching']}","","## Differences by field"]
+lines = ["# Production vs Astro preview parity report","",f"- Live: {LIVE}",f"- Preview: {PREVIEW}",f"- Routes/assets checked: {summary['total_checked']}",f"- Exact checks passed: {summary['matching']}",f"- Differences/errors: {summary['mismatching']}",f"- Product schema blocks actually seen on preview: {summary['approved_product_schema_additions']}/30",f"- Broken live links expected to be repaired on preview: {summary['approved_link_repairs']}","","## Differences by field"]
 lines += [f"- {k}: {v}" for k,v in sorted(summary["issues_by_field"].items(),key=lambda x:-x[1])]
 lines += ["","## Pages with differences"]
 for r in results:
@@ -206,3 +208,5 @@ print('CONTENT/SEO PARITY GATE:', 'PASS' if not critical else 'FAIL',
       '404 differences=',sum(len(row['issues']) for row in results if row['route']=='/404/'))
 if critical:
     raise SystemExit('Content/SEO parity failed: '+str(critical[:20]))
+if summary['approved_product_schema_additions'] != 30:
+    raise SystemExit('Preview deployment is stale or missing Product schemas: '+str(summary['approved_product_schema_additions'])+'/30')
