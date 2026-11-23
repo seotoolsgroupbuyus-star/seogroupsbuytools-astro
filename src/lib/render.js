@@ -212,6 +212,25 @@ export function renderPage(page,settings={}) {
     html=seoMeta(html,'og:description',page.seoDescription,'property');
     html=seoMeta(html,'twitter:description',page.seoDescription);
   }
+  // Optional SEO fields are omitted until the editor explicitly sets them;
+  // an untouched migration remains byte-for-byte equivalent to the source.
+  if(page.seoCanonical?.trim()) {
+    html=html.replace(/(<link\s+rel="canonical"\s+href=")[^"]*(")/i,(_,a,b)=>a+attr(page.seoCanonical.trim())+b);
+    html=seoMeta(html,'og:url',page.seoCanonical.trim(),'property');
+  }
+  if(page.seoRobots?.trim())
+    html=seoMeta(html,'robots',page.seoRobots.trim());
+  if(page.seoSocialImage?.trim()) {
+    const img=attr(page.seoSocialImage.trim());
+    for(const name of ['og:image','twitter:image']){
+      const property=name.startsWith('og:')?'property':'name';
+      const re=new RegExp('<meta\\s+'+property+'="'+name+'"\\s+content="[^"]*"\\s*\\/?>','i');
+      if(re.test(html))html=html.replace(re,'<meta '+property+'="'+name+'" content="'+img+'">');
+      else html=html.replace('</head>','<meta '+property+'="'+name+'" content="'+img+'"></head>');
+    }
+  }
+  if(settings.faviconUrl?.trim())
+    html=html.replace(/(<link\b[^>]*rel="icon"[^>]*href=")[^"]*(")/i,(_,a,b)=>a+attr(settings.faviconUrl.trim())+b);
   return renderChrome(html,settings);
 }
 export default renderPage;
