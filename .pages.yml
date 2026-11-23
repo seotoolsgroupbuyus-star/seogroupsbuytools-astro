@@ -378,6 +378,7 @@ content:
     format: json
     fields:
       - { name: siteName, label: Website name, type: string }
+      - { name: paymentBaseUrl, label: Buy Now, Signup and Login Subdomain, type: string }
       - { name: faviconUrl, label: Site Favicon (optional upload), type: image, options: { media: uploads } }
       - { name: originalSiteName, type: string, hidden: true }
       - name: siteChrome
