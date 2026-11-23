@@ -17,15 +17,14 @@ const linkSources = new Set([
   '/compare/seo-vs-design-group-buy/',
 ]);
 export const repairedLinks = Object.fromEntries(fixedLinks);
-// Change only member login, signup and cart URL hosts; keep plan/product IDs intact.
-function paymentHref(target,settings){
-  const base=String(settings.paymentBaseUrl||'https://pay.seogroupsbuytools.com').replace(/\/$/,'');
-  return String(target).replace(/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|seogroupsbuytools\.com)(?=\/users\/(?:login|signup|cart\/))/i,base);
-}
+// All buy/plan/signup/login actions open the payment homepage, without cart or member paths.
 function rewritePaymentAnchors(html,settings){
-  return String(html).replace(/(\bhref\s*=\s*["'])([^"']+)(["'])/gi,(whole,first,target,last)=>{
-    const updated=paymentHref(target,settings);
-    return first+updated+last;
+  const base=String(settings.paymentBaseUrl||'https://pay.seogroupsbuytools.com').replace(/\/$/,'');
+  return String(html).replace(/(\bhref\s*=\s*["'])([^"']+)(["'])/gi,(whole,open,target,close)=>{
+    if(/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|pay\.seogroupsbuytools\.com|seogroupsbuytools\.com)\/users\/(?:login|signup|cart\/)/i.test(target)
+      || /^https?:\/\/pay\.seogroupsbuytools\.com(?:\/.*)?$/i.test(target))
+      return open+base+close;
+    return whole;
   });
 }
 export function enhanceOutput(html,page,settings={}){
