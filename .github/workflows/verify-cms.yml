@@ -28,7 +28,7 @@ jobs:
       - name: Create temporary CMS blog post for functional rendering test
         run: |
           cat > content/posts/cms-test.json <<'JSON'
-          {"title":"CMS Blog Test","excerpt":"Temporary verification excerpt","featuredImage":"/assets/images/logo-header.png","body":"<h2>CMS BLOG RENDER VALIDATION</h2><p>Article content editable without HTML source mode.</p>","seoTitle":"CMS Blog SEO Title","seoDescription":"CMS Blog SEO Description"}
+          {"title":"CMS Blog Test","excerpt":"Temporary verification excerpt","featuredImage":"/assets/images/logo-header.png","body":"<h2>CMS BLOG RENDER VALIDATION</h2><p>Article content editable without HTML source mode.</p>","seoTitle":"CMS Blog SEO Title","seoDescription":"CMS Blog SEO Description","seoCanonical":"https://seogroupsbuytools.com/cms-custom-article/","seoRobots":"noindex,follow","seoSocialImage":"/assets/images/cms-social-blog.png"}
           JSON
       - name: Apply sample content edits to temporary CI worktree
         run: node scripts/verify-build-output.mjs apply
@@ -44,4 +44,7 @@ jobs:
           grep -q 'CMS Blog SEO Title' dist/blog/cms-test/index.html
           grep -q 'CMS Blog SEO Description' dist/blog/cms-test/index.html
           grep -q '/assets/images/logo-header.png' dist/blog/cms-test/index.html
+          grep -q 'https://seogroupsbuytools.com/cms-custom-article/' dist/blog/cms-test/index.html
+          grep -q 'noindex,follow' dist/blog/cms-test/index.html
+          grep -q '/assets/images/cms-social-blog.png' dist/blog/cms-test/index.html
           rm content/posts/cms-test.json
