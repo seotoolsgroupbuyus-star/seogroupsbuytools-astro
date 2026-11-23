@@ -1,0 +1,32 @@
+name: Live and Astro mobile interaction parity
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/interactive-audit.cjs'
+      - '.github/workflows/interactive-audit.yml'
+permissions:
+  contents: read
+jobs:
+  interactions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium
+      - name: Test mobile navigation and home category filtering on live and Astro
+        run: node scripts/interactive-audit.cjs
+      - name: Upload interaction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-interaction-parity
+          path: audit-results/interactive-results.json
+          if-no-files-found: warn
