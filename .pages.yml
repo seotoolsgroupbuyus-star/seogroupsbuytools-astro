@@ -396,6 +396,7 @@ content:
             fields:
               - { name: text, label: Menu label, type: string }
               - { name: url, label: Menu link, type: string }
+              - { name: visible, label: Show This Link, type: boolean, default: true }
               - { name: originalText, type: string, hidden: true }
               - { name: originalUrl, type: string, hidden: true }
           - { name: footerLogo, label: Footer logo, type: image, options: { media: uploads } }
@@ -412,5 +413,6 @@ content:
             fields:
               - { name: text, label: Link text, type: string }
               - { name: url, label: Destination, type: string }
+              - { name: visible, label: Show This Link, type: boolean, default: true }
               - { name: originalText, type: string, hidden: true }
               - { name: originalUrl, type: string, hidden: true }
