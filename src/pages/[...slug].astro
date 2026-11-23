@@ -1,5 +1,6 @@
 ---
 import renderPage from '../lib/render.js';
+import { enhanceOutput } from '../lib/output-enhancements.js';
 import renderBlog from '../lib/blog.js';
 export async function getStaticPaths() {
   const fs = await import('node:fs');
@@ -30,7 +31,7 @@ export async function getStaticPaths() {
     }));
 }
 const { page, settings } = Astro.props;
-const renderedHtml = renderPage(page,settings);
+const renderedHtml = enhanceOutput(renderPage(page,settings),page,settings);
 
 ---
 <Fragment set:html={renderedHtml} />
