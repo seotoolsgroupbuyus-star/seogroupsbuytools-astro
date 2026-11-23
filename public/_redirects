@@ -1,0 +1,11 @@
+# Legacy article destinations: preserve backlinks while routing users to existing pages.
+/amazon /ecommerce-tools/ 301
+/amazon/ /ecommerce-tools/ 301
+/content /ai-writing-tools/ 301
+/content/ /ai-writing-tools/ 301
+/ppc /spy-tools/ 301
+/ppc/ /spy-tools/ 301
+/guides /guides/keyword-research/ 301
+/guides/ /guides/keyword-research/ 301
+/design /design-tools/ 301
+/design/ /design-tools/ 301
