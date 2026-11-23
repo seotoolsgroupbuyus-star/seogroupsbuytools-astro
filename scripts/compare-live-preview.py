@@ -104,9 +104,33 @@ def check(route):
     pa, pb = Inspector(), Inspector()
     pa.feed(a["body"]); pb.feed(b["body"])
     x, y = pa.result(), pb.result()
+    # Intentional improvements to the Astro replacement: seven repaired article
+    # destinations and additive Product JSON-LD. Compare everything else strictly.
+    repaired_links = {
+        "{{SITE}}/amazon": "/ecommerce-tools/",
+        "{{SITE}}/content": "/ai-writing-tools/",
+        "{{SITE}}/ppc": "/spy-tools/",
+        "{{SITE}}/guides": "/guides/keyword-research/",
+        "{{SITE}}/design": "/design-tools/",
+    }
+    def approved_link(value):
+        norm = normalize_url(value)
+        return repaired_links.get(norm, norm)
+    try:
+        additions = [schema for schema in y["jsonld"] if json.loads(schema).get("@type") == "Product"]
+        if additions:
+            result["approved_product_schema_additions"] = len(additions)
+            y["jsonld"] = [schema for schema in y["jsonld"] if json.loads(schema).get("@type") != "Product"]
+    except (ValueError, AttributeError):
+        pass
     for field in ("title", "headings", "images", "scripts", "stylesheets", "links", "jsonld", "alternates", "text"):
         left, right = x[field], y[field]
-        if field in ("scripts", "stylesheets", "links"):
+        if field == "links":
+            original_links = [normalize_url(v) for v in left]
+            preview_links = [normalize_url(v) for v in right]
+            result["approved_link_repairs"] = sum(1 for v in original_links if v in repaired_links)
+            left, right = [approved_link(v) for v in left], [approved_link(v) for v in right]
+        elif field in ("scripts", "stylesheets"):
             left, right = [normalize_url(v) for v in left], [normalize_url(v) for v in right]
         if left != right:
             issue = {"field":field}
@@ -146,7 +170,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
 for extra in ("/robots.txt", "/sitemap.xml", "/sitemap-index.xml", "/favicon.ico"):
     a,b = fetch(LIVE, extra),fetch(PREVIEW,extra)
     results.append({"route":extra,"live_status":a.get("status"),"preview_status":b.get("status"),"issues":([{"field":"asset_status","live":a.get("status",a.get("error")),"preview":b.get("status",b.get("error"))}] if a.get("status") != b.get("status") else [])})
-summary = {"live":LIVE,"preview":PREVIEW,"total_checked":len(results),"matching":sum(not r["issues"] for r in results),"mismatching":sum(bool(r["issues"]) for r in results),"issues_by_field":{}}
+summary = {"live":LIVE,"preview":PREVIEW,"total_checked":len(results),"matching":sum(not r["issues"] for r in results),"mismatching":sum(bool(r["issues"]) for r in results),"approved_product_schema_additions":sum(r.get("approved_product_schema_additions",0) for r in results),"approved_link_repairs":sum(r.get("approved_link_repairs",0) for r in results),"issues_by_field":{}}
 for result in results:
     for issue in result["issues"]:
         field = issue["field"]
