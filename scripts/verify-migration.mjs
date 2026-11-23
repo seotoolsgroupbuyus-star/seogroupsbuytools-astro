@@ -46,7 +46,7 @@ for(const item of records){
    if(!fs.existsSync(path.join('dist',u.pathname.slice(1))))warnings.push('Local media asset not found: '+u.pathname+' on '+route);
   }
  }
- for(const match of html.matchAll(/<a\\b[^>]*?\\bhref=["']([^"']+)["']/gi)){
+ for(const match of html.matchAll(/<a\b[^>]*?\bhref=["']([^"']+)["']/gi)){
   const href=match[1];
   if(!href||href.startsWith('#')||/^(mailto:|tel:|javascript:|data:)/i.test(href))continue;
   let target;try{target=new URL(href,base+route)}catch{continue}
