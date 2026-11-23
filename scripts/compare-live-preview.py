@@ -168,4 +168,17 @@ for r in results:
                 lines.append("- "+change["type"]+" original="+json.dumps(" ".join(change["live_words"]), ensure_ascii=False)+" preview="+json.dumps(" ".join(change["preview_words"]), ensure_ascii=False))
 (OUT/"parity-report.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
 print("\n".join(lines))
-# Audit is informational while parity is being fixed. Reports are uploaded as artifacts.
+# Make the workflow a real gate for user-visible content and SEO parity.
+# Next.js runtime scripts are expected to differ from Astro's scripts; audit them
+# as warnings because byte identity does not establish functional equivalence.
+# /404/ is a special HTTP status route, tracked separately until edge behavior
+# is verified; it is never treated as a published/indexable content page.
+critical=[(row['route'],issue['field']) for row in results
+          if row['route']!='/404/' for issue in row['issues']
+          if issue['field']!='scripts']
+print('CONTENT/SEO PARITY GATE:', 'PASS' if not critical else 'FAIL',
+      'critical differences=',len(critical),
+      'runtime script differences=',summary['issues_by_field'].get('scripts',0),
+      '404 differences=',sum(len(row['issues']) for row in results if row['route']=='/404/'))
+if critical:
+    raise SystemExit('Content/SEO parity failed: '+str(critical[:20]))
