@@ -15,7 +15,7 @@ walk('dist');
 assert.ok(files.length>=71,'Expected published pages before checkout verification');
 let checked=0;
 const issues=[];
-const labelRule=/^(?:(?:💬|🛒|🔐)\s*)?(?:buy\s*now(?:\s+on\s+whatsapp)?|sign[\s-]*up|register(?:\s+now)?|log[\s-]*in|login|create\s+(?:an?\s+)?account|checkout|proceed\s+to\s+checkout|get\s+started|start\s+now|join\s+now|purchase\s+now|subscribe\s+now|choose\s+(?:this\s+)?plan|select\s+(?:this\s+)?plan|buy\s+(?:this\s+)?plan)(?:\s*[!→»])?$/i;
+const labelRule=/^(?:(?:💬|🛒|🔐)\s*)?(?:buy\s*now(?:\s+on\s+whatsapp)?|sign[\s-]*up|register(?:\s+now)?|log[\s-]*in|login|create\s+(?:an?\s+)?account|checkout|proceed\s+to\s+checkout|get\s+started|get\s+(?:vip\s+)?access|order\s+now|start\s+now|join\s+now|purchase\s+now|subscribe\s+now|choose\s+(?:this\s+)?plan|select\s+(?:this\s+)?plan|buy\s+(?:this\s+)?plan)(?:\s*[!→»])?$/i;
 const legacyTarget=/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|seogroupsbuytools\.com|pay\.seogroupsbuytools\.com)\/users\/(?:cart|signup|login)/i;
 for(const file of files){
   const html=fs.readFileSync(file,'utf8');
