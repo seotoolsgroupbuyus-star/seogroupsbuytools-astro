@@ -39,7 +39,9 @@ export function enhanceOutput(html,page,settings={}){
   // single-column CSS grid uses the intrinsic minimum width of a data table.
   // Constrain the grid track while leaving the table horizontally scrollable.
   if(page.route==='/is-it-safe/'){
-    const responsive='<style>@media(max-width:640px){.content-layout,.content-layout--full,.content-layout:not(:has(.sidebar)){grid-template-columns:minmax(0,1fr)}.content-article,.tables-section{min-width:0;max-width:100%}.table-wrap{max-width:100%;overflow-x:auto}}</style>';
+    // Restrict the grid's min-content sizing and contain the wide data table
+    // in a horizontal scroller instead of making the entire document wider.
+    const responsive='<style>@media(max-width:640px){.content-layout,.content-layout--full,.content-layout:not(:has(.sidebar)){grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}.content-layout>.main-content,.content-article,.content-article .content-section,.tables-section,.tables-section .table-wrap{box-sizing:border-box;min-width:0;max-width:100%}.tables-section .table-wrap{display:block;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}.tables-section .data-table{width:max-content;min-width:600px;max-width:none}}</style>';
     html=html.replace('</head>',responsive+'\n</head>');
   }
   if(!page.productHero)return html;
