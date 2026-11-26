@@ -23,6 +23,8 @@ for(const file of files){
     const anchor=m[0],href=anchor.match(/\bhref\s*=\s*(["'])(.*?)\1/i);
     if(!href)continue;
     const label=anchor.slice(anchor.indexOf('>')+1,anchor.lastIndexOf('</a>')).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    // WhatsApp-specific support/contact actions intentionally remain WhatsApp.
+    if(/^https?:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)(?:\/|$)/i.test(href[2]))continue;
     if(labelRule.test(label)||legacyTarget.test(href[2])||href[2].startsWith(payment)){
       checked++;
       if(href[2]!==payment)issues.push({file,label,href:href[2]});
