@@ -5,9 +5,47 @@ import renderPage from '../src/lib/render.js';
 const files=['content/homepage.json',...['products','pages'].flatMap(dir=>fs.readdirSync('content/'+dir).filter(x=>x.endsWith('.json')).map(f=>'content/'+dir+'/'+f))];
 const site=JSON.parse(fs.readFileSync('content/settings.json','utf8'));
 const totals={pages:0,groups:0,outsideGroups:0,editableText:0,buttons:0,cards:0,images:0,prices:0,seo:0,hero:0,global:0,products:0,productFields:0,labels:0,offsets:0,nested:0,duplicates:0,inlineFormatting:0,assetPaths:0};
+// Reconstruct the unedited imported view before checking byte-for-byte parity.
+// A page may already contain intentional CMS edits (for example payment links),
+// so comparing its current rendered output to its original HTML is incorrect.
+function originalView(page,settings) {
+  const p=structuredClone(page),s=structuredClone(settings);
+  const restore=(obj,key,original)=>{if(obj && Object.hasOwn(obj,original)) obj[key]=obj[original];};
+  restore(p,'title','originalPageTitle');
+  restore(p,'seoTitle','originalSeoTitle');
+  restore(p,'seoDescription','originalSeoDescription');
+  if(p.hero&&p.originalHero)p.hero=structuredClone(p.originalHero);
+  p.extraSections=[];
+  for(const g of [...(p.contentGroups||[]),...(p.outsideGroups||[])]) {
+    restore(g,'heading','originalHeading');
+    for(const item of g.items||[])restore(item,'text','originalText');
+  }
+  for(const item of p.buttons||[]) {restore(item,'text','originalText');restore(item,'url','originalUrl');}
+  for(const item of p.cardLinks||[])restore(item,'url','originalUrl');
+  for(const item of p.mediaImages||[]) {restore(item,'src','originalSrc');restore(item,'alt','originalAlt');}
+  for(const item of p.priceValues||[])restore(item,'value','originalValue');
+  for(const item of p.labelTexts||[])restore(item,'text','originalText');
+  if(p.productHero) {
+    for(const [key,orig] of Object.entries({name:'originalName',description:'originalDescription',price:'originalPrice',image:'originalImage',imageAlt:'originalImageAlt',buttonLabel:'originalButtonLabel',buttonUrl:'originalButtonUrl'}))
+      restore(p.productHero,key,orig);
+    for(const item of p.productHero.features||[])restore(item,'text','originalText');
+  }
+  // Optional SEO overrides are defined only after a user explicitly edits them.
+  p.seoCanonical='';p.seoRobots='';p.seoSocialImage='';
+  restore(s,'siteName','originalSiteName');
+  if(s.siteChrome){
+    for(const key of ['headerLinks','footerLinks'])
+      s.siteChrome[key]=(s.siteChrome[key]||[]).filter(x=>x.originalText).map(x=>({...x,text:x.originalText,url:x.originalUrl,visible:true}));
+    for(const [key,orig] of Object.entries({headerLogo:'originalHeaderLogo',footerLogo:'originalFooterLogo',footerText:'originalFooterText'}))
+      restore(s.siteChrome,key,orig);
+  }
+  s.faviconUrl='';
+  return {page:p,settings:s};
+}
 for (const file of files) {
   const page=JSON.parse(fs.readFileSync(file,'utf8'));
-  assert.equal(renderPage(page,site),page.html,'Unedited page HTML changed: '+file);
+  const baseline=originalView(page,site);
+  assert.equal(renderPage(baseline.page,baseline.settings),page.html,'Imported HTML parity lost: '+file);
   if(file==='content/homepage.json'){
     const extraNav=structuredClone(site);
     extraNav.siteChrome.headerLinks.push({text:'CMS ADDED MENU LINK',url:'/cms-new-nav/'});
