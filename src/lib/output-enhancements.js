@@ -25,7 +25,7 @@ function rewritePaymentAnchors(html,settings){
   const paymentTarget=/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|pay\.seogroupsbuytools\.com|seogroupsbuytools\.com)\/users\/(?:login|signup|cart(?:\/|$))/i;
   const currentPayment=/^https?:\/\/pay\.seogroupsbuytools\.com(?:[\/?#]|$)/i;
   const relativeAccount=/^\/?users\/(?:login|signup|cart(?:\/|$))/i;
-  const actionLabel=/^(?:(?:💬|🛒|🔐)\s*)?(?:buy\s*now(?:\s+on\s+whatsapp)?|sign[\s-]*up|register(?:\s+now)?|log[\s-]*in|login|create\s+(?:an?\s+)?account|checkout|proceed\s+to\s+checkout|get\s+started|start\s+now|join\s+now|purchase\s+now|subscribe\s+now|choose\s+(?:this\s+)?plan|select\s+(?:this\s+)?plan|buy\s+(?:this\s+)?plan)(?:\s*[!→»])?$/i;
+  const actionLabel=/^(?:(?:💬|🛒|🔐)\s*)?(?:buy\s*now(?:\s+on\s+whatsapp)?|sign[\s-]*up|register(?:\s+now)?|log[\s-]*in|login|create\s+(?:an?\s+)?account|checkout|proceed\s+to\s+checkout|get\s+started|get\s+(?:vip\s+)?access|order\s+now|start\s+now|join\s+now|purchase\s+now|subscribe\s+now|choose\s+(?:this\s+)?plan|select\s+(?:this\s+)?plan|buy\s+(?:this\s+)?plan)(?:\s*[!→»])?$/i;
   return String(html).replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi,anchor=>{
     const href=anchor.match(/\bhref\s*=\s*(["'])(.*?)\1/i);
     if(!href)return anchor;
