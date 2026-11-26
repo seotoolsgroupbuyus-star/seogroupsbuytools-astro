@@ -6,7 +6,8 @@ const sample = [
   ['content/products/seo-tools__ahrefs.json',p=>{
     p.productHero.name='CMS EDITED AHREFS';
     p.productHero.price='$12345';
-    p.productHero.buttonUrl='/cms-checkout-validation/';
+    p.productHero.buttonUrl='https://pay.seogroupsbuytools.com';
+    p.productHero.buttonLabel='CMS BUY BUTTON VALIDATION';
   }],
   ['content/pages/pricing.json',p=>{
     assert.ok(p.priceValues?.length);
@@ -34,7 +35,8 @@ if (mode==='apply') {
     ['dist/index.html','CMS HOME HERO VALIDATION'],
     ['dist/seo-tools/ahrefs/index.html','$12345'],
     ['dist/seo-tools/ahrefs/index.html','CMS EDITED AHREFS'],
-    ['dist/seo-tools/ahrefs/index.html','/cms-checkout-validation/'],
+    ['dist/seo-tools/ahrefs/index.html','https://pay.seogroupsbuytools.com'],
+    ['dist/seo-tools/ahrefs/index.html','CMS BUY BUTTON VALIDATION'],
     ['dist/pricing/index.html','$54321'],
     ['dist/faq/index.html','CMS FAQ VALIDATION'],
     ['dist/index.html','CMS FOOTER VALIDATION']
