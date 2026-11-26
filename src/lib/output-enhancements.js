@@ -31,6 +31,8 @@ function rewritePaymentAnchors(html,settings){
     if(!href)return anchor;
     const inner=anchor.slice(anchor.indexOf('>')+1,anchor.lastIndexOf('</a>'));
     const label=inner.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    // Explicit WhatsApp links are customer support/contact links, never checkout redirects.
+    if(/^https?:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)(?:\/|$)/i.test(href[2]))return anchor;
     if(!(paymentTarget.test(href[2])||currentPayment.test(href[2])||relativeAccount.test(href[2])||actionLabel.test(label)))
       return anchor;
     let updated=anchor.replace(href[0],href[0].replace(href[2],base));
