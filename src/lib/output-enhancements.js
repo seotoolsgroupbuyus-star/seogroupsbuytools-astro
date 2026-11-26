@@ -18,15 +18,29 @@ const linkSources = new Set([
 ]);
 export const repairedLinks = Object.fromEntries(fixedLinks);
 // All buy/plan/signup/login actions open the payment homepage, without cart or member paths.
+// Keep all purchase/account CTAs on the merchant's configured payment homepage.
+// Support-only WhatsApp links and navigation to product/pricing articles are untouched.
 function rewritePaymentAnchors(html,settings){
   const base=String(settings.paymentBaseUrl||'https://pay.seogroupsbuytools.com').replace(/\/$/,'');
-  return String(html).replace(/(\bhref\s*=\s*["'])([^"']+)(["'])/gi,(whole,open,target,close)=>{
-    if(/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|pay\.seogroupsbuytools\.com|seogroupsbuytools\.com)\/users\/(?:login|signup|cart\/)/i.test(target)
-      || /^https?:\/\/pay\.seogroupsbuytools\.com(?:\/.*)?$/i.test(target))
-      return open+base+close;
-    return whole;
+  const paymentTarget=/^https?:\/\/(?:www\.)?(?:seogroupsbuy\.com|pay\.seogroupsbuytools\.com|seogroupsbuytools\.com)\/users\/(?:login|signup|cart(?:\/|$))/i;
+  const currentPayment=/^https?:\/\/pay\.seogroupsbuytools\.com(?:[\/?#]|$)/i;
+  const relativeAccount=/^\/?users\/(?:login|signup|cart(?:\/|$))/i;
+  const actionLabel=/^(?:(?:💬|🛒|🔐)\s*)?(?:buy\s*now(?:\s+on\s+whatsapp)?|sign[\s-]*up|register(?:\s+now)?|log[\s-]*in|login|create\s+(?:an?\s+)?account|checkout|proceed\s+to\s+checkout|get\s+started|start\s+now|join\s+now|purchase\s+now|subscribe\s+now|choose\s+(?:this\s+)?plan|select\s+(?:this\s+)?plan|buy\s+(?:this\s+)?plan)(?:\s*[!→»])?$/i;
+  return String(html).replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi,anchor=>{
+    const href=anchor.match(/\bhref\s*=\s*(["'])(.*?)\1/i);
+    if(!href)return anchor;
+    const inner=anchor.slice(anchor.indexOf('>')+1,anchor.lastIndexOf('</a>'));
+    const label=inner.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    if(!(paymentTarget.test(href[2])||currentPayment.test(href[2])||relativeAccount.test(href[2])||actionLabel.test(label)))
+      return anchor;
+    let updated=anchor.replace(href[0],href[0].replace(href[2],base));
+    // The old button's WhatsApp wording must not misrepresent the payment link.
+    if(/^(?:💬\s*)?buy\s+now\s+on\s+whatsapp$/i.test(label))
+      updated=updated.replace(/>\s*(?:💬\s*)?Buy\s+Now\s+on\s+WhatsApp\s*<\/a>$/i,'>Buy Now</a>');
+    return updated;
   });
 }
+
 export function enhanceOutput(html,page,settings={}){
   html=rewritePaymentAnchors(html,settings);
   if(linkSources.has(page.route)){
