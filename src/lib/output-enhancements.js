@@ -1,3 +1,4 @@
+import { replaceHomepageHero } from './toolcookies-hero.js';
 // Enhancements applied only to generated Astro HTML; immutable CMS source is kept intact.
 // These routes were audited as unresolved links from the original imported HTML.
 const fixedLinks = new Map([
@@ -45,6 +46,8 @@ function rewritePaymentAnchors(html,settings){
 
 export function enhanceOutput(html,page,settings={}){
   html=rewritePaymentAnchors(html,settings);
+  // Homepage-only approved visual hero, using already-rendered Pages CMS content.
+  if(page.route==='/')html=replaceHomepageHero(html);
   if(linkSources.has(page.route)){
     html=html.replace(/(<a\b[^>]*\bhref=")([^"]+)(")/gi,(full,before,url,after)=>{
       const target=fixedLinks.get(url);
