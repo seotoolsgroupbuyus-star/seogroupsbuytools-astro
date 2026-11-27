@@ -54,7 +54,7 @@ export function replaceHomepageHero(html){
  };
  const buttons=links.slice(0,2).map(makeCta).join('');
  if(!buttons)return html;
- const transformed=SOURCE.replace('__DYNAMIC_TITLE__',animatedWords(title))
+ const transformed=SOURCE.replace('<h1 class="display hero__title">','<h1 class="display hero__title" aria-label="'+attr(plain(title))+'">').replace('__DYNAMIC_TITLE__',animatedWords(title))
    .replace('__DYNAMIC_DESC__',desc).replace('__DYNAMIC_CTAS__',buttons);
  return html.slice(0,from)+'<link rel="stylesheet" href="/assets/tc-hero.css">'
    +'<section class="tc-hero" id="home-hero">'+transformed+'</section>'
